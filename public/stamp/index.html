@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stamp — Akshaya Kumar T</title>
+    <meta name="description" content="Drop in a photo, adjust it, and punch out a perforated postage stamp.">
+    <style>
+        :root{--bg:#fff;--fg:#111;--muted:#6b6b6b;--line:#e8e8e8;--accent:#2563eb;--stage:#f4f4f2}
+        @media (prefers-color-scheme:dark){:root{--bg:#0b0b0c;--fg:#f2f2f2;--muted:#8d8d92;--line:#232326;--accent:#7aa2ff;--stage:#141416}}
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+        main{max-width:720px;margin:0 auto;padding:56px 24px 80px}
+        a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+        h1{font-size:1.5rem;margin:16px 0 4px}
+        .d{color:var(--muted);font-size:.92rem;margin:0 0 24px}
+        .stage{background:var(--stage);border-radius:16px;padding:32px;display:grid;place-items:center;border:1px dashed var(--line)}
+        .stage.over{border-color:var(--accent)}
+        canvas{cursor:grab;touch-action:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.25));max-width:100%;height:auto}
+        canvas:active{cursor:grabbing}
+        .controls{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+        label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+        input[type=text]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+        input[type=range]{width:100%}
+        .btns{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+        button,.btn{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:.9rem;cursor:pointer}
+        button.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+        input[type=file]{display:none}
+        @media(max-width:520px){.controls{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<main>
+    <a href="/projects/">← Projects</a>
+    <h1>Stamp</h1>
+    <p class="d">Drop in a photo, drag it into place, zoom, then punch out a perforated stamp. Everything happens in your browser, nothing is uploaded.</p>
+
+    <div class="stage" id="stage"><canvas id="c"></canvas></div>
+
+    <div class="controls">
+        <div><label for="zoom">Zoom</label><input id="zoom" type="range" min="1" max="3" step="0.01" value="1"></div>
+        <div><label for="perf">Perforation size</label><input id="perf" type="range" min="4" max="14" step="1" value="8"></div>
+        <div><label for="label">Caption</label><input id="label" type="text" value="AKSHAYA KUMAR" maxlength="24"></div>
+        <div><label for="val">Value</label><input id="val" type="text" value="₹10" maxlength="8"></div>
+    </div>
+
+    <div class="btns">
+        <button class="primary" id="dl">Punch &amp; download PNG</button>
+        <button id="pick">Choose photo</button>
+        <input id="file" type="file" accept="image/*">
+    </div>
+</main>
+<script>
+    const W=320,H=400,S=2;
+    const c=document.getElementById('c'),ctx=c.getContext('2d');
+    c.width=W*S;c.height=H*S;c.style.width=W+'px';
+    const $=id=>document.getElementById(id);
+    let img=null,px=0,py=0;
+
+    function placeholder(){
+        const g=document.createElement('canvas');g.width=600;g.height=600;
+        const x=g.getContext('2d');
+        const gr=x.createLinearGradient(0,0,600,600);gr.addColorStop(0,'#f6c177');gr.addColorStop(1,'#eb6f92');
+        x.fillStyle=gr;x.fillRect(0,0,600,600);
+        x.fillStyle='rgba(255,255,255,.9)';x.font='600 48px system-ui';x.textAlign='center';
+        x.fillText('drop a photo',300,310);
+        return g;
+    }
+    img=placeholder();
+
+    function draw(){
+        const m=30,labelH=44;
+        const ix=m,iy=m,iw=W-2*m,ih=H-2*m-labelH;
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.clearRect(0,0,c.width,c.height);
+        ctx.globalCompositeOperation='source-over';
+        ctx.scale(S,S);
+        ctx.fillStyle='#fdfcf8';ctx.fillRect(0,0,W,H);
+
+        // photo, cover-fit with zoom and pan
+        const z=+$('zoom').value;
+        const sc=Math.max(iw/img.width,ih/img.height)*z;
+        const dw=img.width*sc,dh=img.height*sc;
+        const mx=Math.max(0,(dw-iw)/2),my=Math.max(0,(dh-ih)/2);
+        px=Math.max(-mx,Math.min(mx,px));py=Math.max(-my,Math.min(my,py));
+        ctx.save();
+        ctx.beginPath();ctx.rect(ix,iy,iw,ih);ctx.clip();
+        ctx.drawImage(img,ix+(iw-dw)/2+px,iy+(ih-dh)/2+py,dw,dh);
+        ctx.restore();
+        ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=1;ctx.strokeRect(ix+.5,iy+.5,iw-1,ih-1);
+
+        // caption + value
+        ctx.fillStyle='#3a3a3a';
+        ctx.font='600 13px Georgia,serif';ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText($('label').value.toUpperCase(),ix,iy+ih+labelH/2);
+        ctx.font='700 20px Georgia,serif';ctx.textAlign='right';
+        ctx.fillText($('val').value,ix+iw,iy+ih+labelH/2);
+
+        // perforations: punch semicircles out along every edge
+        const r=+$('perf').value/2*1.0, pitch=r*3.2;
+        ctx.globalCompositeOperation='destination-out';
+        ctx.fillStyle='#000';
+        const edge=(len,fn)=>{const n=Math.round(len/pitch),step=len/n;for(let i=0;i<n;i++){ctx.beginPath();const t=(i+.5)*step;fn(t);ctx.fill();}};
+        edge(W,t=>{ctx.arc(t,0,r,0,7);});
+        edge(W,t=>{ctx.arc(t,H,r,0,7);});
+        edge(H,t=>{ctx.arc(0,t,r,0,7);});
+        edge(H,t=>{ctx.arc(W,t,r,0,7);});
+        ctx.globalCompositeOperation='source-over';
+    }
+
+    function load(file){
+        if(!file||!file.type.startsWith('image/'))return;
+        const i=new Image();
+        i.onload=()=>{img=i;px=py=0;$('zoom').value=1;draw();};
+        i.src=URL.createObjectURL(file);
+    }
+
+    // drag to pan
+    let drag=null;
+    c.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};c.setPointerCapture(e.pointerId);});
+    c.addEventListener('pointermove',e=>{if(!drag)return;px+=e.clientX-drag.x;py+=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};draw();});
+    c.addEventListener('pointerup',()=>drag=null);
+
+    ['zoom','perf','label','val'].forEach(id=>$(id).addEventListener('input',draw));
+    $('pick').onclick=()=>$('file').click();
+    $('file').onchange=e=>load(e.target.files[0]);
+
+    // drop anywhere on the stage
+    const st=$('stage');
+    st.addEventListener('dragover',e=>{e.preventDefault();st.classList.add('over');});
+    st.addEventListener('dragleave',()=>st.classList.remove('over'));
+    st.addEventListener('drop',e=>{e.preventDefault();st.classList.remove('over');load(e.dataTransfer.files[0]);});
+
+    $('dl').onclick=()=>c.toBlob(b=>{
+        const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='stamp.png';a.click();
+    });
+
+    draw();
+</script>
+</body>
+</html>
