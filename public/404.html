@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>404 — Akshaya Kumar T</title>
+    <style>
+        :root{--bg:#fff;--fg:#111;--muted:#6b6b6b;--line:#e8e8e8;--accent:#2563eb;--ok:#16a34a}
+        @media (prefers-color-scheme:dark){:root{--bg:#0b0b0c;--fg:#f2f2f2;--muted:#8d8d92;--line:#232326;--accent:#7aa2ff;--ok:#4ade80}}
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+        main{max-width:640px;margin:0 auto;padding:72px 24px 96px}
+        a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+        h1{font-size:1.5rem;margin:16px 0 8px}
+        h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:40px 0 12px;font-weight:600}
+        ul{list-style:none;padding:0;margin:0}
+        li{padding:12px 0;border-bottom:1px solid var(--line)}li:last-child{border:0}
+        .d{color:var(--muted);font-size:.92rem}
+        .row{display:flex;justify-content:space-between;gap:16px;align-items:center}
+        .row span:last-child{color:var(--muted);font-size:.9rem;white-space:nowrap}
+        .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);margin-right:10px}
+        code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;background:var(--line);padding:2px 6px;border-radius:6px}
+    </style>
+</head>
+<body>
+<main>
+    <p class="d"><code id="req">GET /</code></p>
+    <h1>404: cache miss</h1>
+    <p>Checked L1. Checked L2. Went all the way to origin. Origin also has no idea what you're talking about.</p>
+    <p class="d">Possible causes: a typo, a stale link, or a reference update nobody invalidated. Classic.</p>
+    <p><a href="/">← Back to a page that exists</a></p>
+</main>
+<script>document.getElementById('req').textContent='GET '+location.pathname+'  →  404';</script>
+</body>
+</html>
